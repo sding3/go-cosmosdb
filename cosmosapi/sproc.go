@@ -2,6 +2,8 @@ package cosmosapi
 
 import (
 	"context"
+	"net/http"
+	"strconv"
 )
 
 type StoredProcedure struct {
@@ -78,6 +80,10 @@ type ExecuteStoredProcedureOptions struct {
 	PartitionKeyValue interface{}
 }
 
+type ExecuteStoredProcedureResponse struct {
+	RUs float64
+}
+
 func (ops ExecuteStoredProcedureOptions) AsHeaders() (map[string]string, error) {
 	headers := make(map[string]string)
 	if ops.PartitionKeyValue != nil {
@@ -94,12 +100,17 @@ func (c *Client) ExecuteStoredProcedure(
 	ctx context.Context, dbName, colName, sprocName string,
 	ops ExecuteStoredProcedureOptions,
 	ret interface{}, args ...interface{},
-) error {
+) (ExecuteStoredProcedureResponse, error) {
 	headers, err := ops.AsHeaders()
 	if err != nil {
-		return err
+		return ExecuteStoredProcedureResponse{}, err
 	}
 	link := createSprocLink(dbName, colName, sprocName)
-	_, err = c.create(ctx, link, args, ret, headers)
-	return err
+	resp, err := c.create(ctx, link, args, ret, headers)
+	return parseExecuteStoredProcedureResponse(resp), nil
+}
+
+func parseExecuteStoredProcedureResponse(resp *http.Response) (parsed ExecuteStoredProcedureResponse) {
+	parsed.RUs, _ = strconv.ParseFloat(resp.Header.Get(HEADER_REQUEST_CHARGE), 64)
+	return
 }
