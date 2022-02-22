@@ -1,4 +1,4 @@
-module github.com/vippsas/go-cosmosdb
+module github.com/sding3/go-cosmosdb
 
 require (
 	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1
