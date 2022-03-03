@@ -105,6 +105,21 @@ func (c *Client) delete(ctx context.Context, link string, headers map[string]str
 	return c.method(ctx, "DELETE", link, nil, nil, headers)
 }
 
+type patchRequest struct {
+	Condition  string           `json:"condition,omitempty"`
+	Operations []PatchOperation `json:"operations"`
+}
+
+func (c *Client) patch(ctx context.Context, link string, p patchRequest, ret interface{}, headers map[string]string) (*http.Response, error) {
+	data, err := stringify(p)
+	if err != nil {
+		return nil, err
+	}
+	buf := bytes.NewBuffer(data)
+
+	return c.method(ctx, "PATCH", link, ret, buf, headers)
+}
+
 func (c *Client) query(ctx context.Context, link string, body, ret interface{}, headers map[string]string) (*http.Response, error) {
 	return c.create(ctx, link, body, ret, headers)
 }
